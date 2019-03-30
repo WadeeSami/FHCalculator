@@ -6,7 +6,7 @@ let (|SingleDigitString|_|) input =
    if (m.Success) then Some input else None
 
 let (|TwoDigitString|_|) input =
-   let m = Regex.Match(input, @"^[0-9]+,[0-9]+$")
+   let m = Regex.Match(input, @"^([0-9]+,)+[0-9]+$")
    if (m.Success) then Some input else None
 
 let rec add s =
@@ -18,6 +18,6 @@ let rec add s =
     | TwoDigitString x ->
         x.Split ',' |> Seq.map int |> Seq.sum
     | _ ->
-        failwith "message"
+        failwith "Invalid Input"
 
-printfn "%i" (add "76,3456")
+printfn "%i" (add "11,22,33,1000")
