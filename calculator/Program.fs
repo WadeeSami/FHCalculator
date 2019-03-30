@@ -1,12 +1,6 @@
 ﻿open System
 open System.Text.RegularExpressions
 
-//type NegativeNumbersException(msg : string) =
-//    inherit Exception(msg)
-//    member e.Code = code
-//    new(msg : string) = NegativeNumbersException(msg)
-
-let supportedDelimiters = [ ','; '\n' ]
 let defaultDelimmiter = ";"
 let (|SingleDigitString|_|) input =
    let m = Regex.Match(input, @"^[0-9]+$")
@@ -18,19 +12,22 @@ let (|TwoDigitString|_|) input =
 
 let (|AdvancedString|_|) input =
    let delimiters = [ ';'; ',' ]
-   let m = Regex.Match(input, @"^//(?<delim>.+)\n(-?[0-9]+\k<delim>)+-?[0-9]+$")
+   let m = Regex.Match(input, @"^//(\[(?<delim>.+)\])+\n(-?[0-9]+.+)+-?[0-9]+$")
    if (m.Success) then Some(input.Split '\n') else None
 
 let getNumbersPart (originalString : String) =
     originalString.Split('\n').[1]
 
 let getDelimitersPart (splitString : String []) =
+    // gets the delimiter after splitting original string with \n
     if splitString.Length > 1 then
-        splitString.[0].Split([| "//" |], StringSplitOptions.RemoveEmptyEntries).[0]
+        let delimStr = splitString.[0].Split([| "//" |], StringSplitOptions.RemoveEmptyEntries).[0]
+        let sliced = delimStr.[1..delimStr.Length-2]
+        sliced.Split([|"]["|], StringSplitOptions.RemoveEmptyEntries) 
     else
-        defaultDelimmiter
+        [|defaultDelimmiter|]
 
-let rec add s =
+let add s =
     match s with
     | "" ->
         0
@@ -41,8 +38,7 @@ let rec add s =
     | AdvancedString x ->
         let nums = getNumbersPart s
         let delims = getDelimitersPart x
-        let arrayOfNums = nums.Split([| delims |], StringSplitOptions.RemoveEmptyEntries) |> Seq.map int
-        let isNeg x = (x < 0)
+        let arrayOfNums = nums.Split(delims, StringSplitOptions.RemoveEmptyEntries) |> Seq.map int
         let negatives = arrayOfNums |> Seq.filter (fun x -> int x < 0)
         if Seq.length negatives > 0 then
             let errStatement = sprintf "Operation Not Allowed On Negative Numbers %A" (negatives |> Seq.map string |> String.concat ",")
@@ -53,4 +49,7 @@ let rec add s =
     | _ ->
         failwith "Invalid Input"
 
-printfn "%i" (add "//,,\n12,,3,,1000,,100,,2000")
+printfn "%i" (add "//[,,][*]\n12,,3,,1000,,100*200")
+printfn "%i" (add "//[%][***]\n1***2%34")
+//printfn "%i" (add "//[%][***]\n1***2%-34")
+printfn "%i" (add "//[,,]\n1200,,3000,,1000,,10000,,2000")
