@@ -49,8 +49,8 @@ let rec add s =
             failwith errStatement
 
         else
-            arrayOfNums |> Seq.sum
+            arrayOfNums |>  Seq.filter (fun x -> x < 1000) |> Seq.sum
     | _ ->
         failwith "Invalid Input"
 
-printfn "%i" (add "//,,\n-12,,-3,,1000,,-100,,-2000")
+printfn "%i" (add "//,,\n12,,3,,1000,,100,,2000")
