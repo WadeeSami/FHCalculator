@@ -1,6 +1,11 @@
 ﻿open System
 open System.Text.RegularExpressions
 
+//type NegativeNumbersException(msg : string) =
+//    inherit Exception(msg)
+//    member e.Code = code
+//    new(msg : string) = NegativeNumbersException(msg)
+
 let supportedDelimiters = [ ','; '\n' ]
 let defaultDelimmiter = ";"
 let (|SingleDigitString|_|) input =
@@ -13,7 +18,7 @@ let (|TwoDigitString|_|) input =
 
 let (|AdvancedString|_|) input =
    let delimiters = [ ';'; ',' ]
-   let m = Regex.Match(input, @"^//(?<delim>.+)\n([0-9]+\k<delim>)+[0-9]+$")
+   let m = Regex.Match(input, @"^//(?<delim>.+)\n(-?[0-9]+\k<delim>)+-?[0-9]+$")
    if (m.Success) then Some(input.Split '\n') else None
 
 let getNumbersPart (originalString : String) =
@@ -36,8 +41,16 @@ let rec add s =
     | AdvancedString x ->
         let nums = getNumbersPart s
         let delims = getDelimitersPart x
-        nums.Split([| delims |], StringSplitOptions.RemoveEmptyEntries) |> Seq.map int |> Seq.sum
+        let arrayOfNums = nums.Split([| delims |], StringSplitOptions.RemoveEmptyEntries) |> Seq.map int
+        let isNeg x = (x < 0)
+        let negatives = arrayOfNums |> Seq.filter (fun x -> int x < 0)
+        if Seq.length negatives > 0 then
+            let errStatement = sprintf "Operation Not Allowed On Negative Numbers %A" (negatives |> Seq.map string |> String.concat ",")
+            failwith errStatement
+
+        else
+            arrayOfNums |> Seq.sum
     | _ ->
         failwith "Invalid Input"
-        
-printfn "%i" (add "//,,\n12,,3,,1000")
+
+printfn "%i" (add "//,,\n-12,,-3,,1000,,-100,,-2000")
